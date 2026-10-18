@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "integrity-analytics-service"
+version = "0.1.0"
+description = "Serviço inicial de análise de integridade para a plataforma PetroEdge"
+requires-python = ">=3.11"
+dependencies = [
+  "grpcio==1.76.0",
+  "grpcio-tools==1.76.0",
+  "protobuf>=6.31.1,<7.0.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.3,<9.0"]
+
+[project.scripts]
+integrity-analytics = "integrity_analytics.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: integrity-analytics-service
+Version: 0.1.0
+Summary: Serviço inicial de análise de integridade para a plataforma PetroEdge
+Requires-Python: >=3.11
+Requires-Dist: grpcio==1.76.0
+Requires-Dist: grpcio-tools==1.76.0
+Requires-Dist: protobuf<7.0.0,>=6.31.1
+Provides-Extra: test
+Requires-Dist: pytest<9.0,>=8.3; extra == "test"

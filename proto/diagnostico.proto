@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package br.com.petroedge.diagnostico.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option java_multiple_files = true;
+option java_package = "br.com.petroedge.diagnostico.grpc";
+option java_outer_classname = "DiagnosticoProto";
+
+service DiagnosticoService {
+  rpc RegistrarDiagnostico (DiagnosticoRequest) returns (DiagnosticoResponse);
+}
+
+message DiagnosticoRequest {
+  int64 fonte_id = 1;
+  string descricao = 2;
+  google.protobuf.Timestamp dt_criacao = 3;
+  int32 severidade = 4;
+}
+
+message DiagnosticoResponse { string id = 1; }
+message RegistrarDiagnosticosResponse { int32 total_recebidos = 1; }

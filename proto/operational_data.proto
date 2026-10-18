@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package petroedge.operational.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service OperationalDataService {
+  rpc RegisterAsset(RegisterAssetRequest) returns (RegisterAssetResponse);
+  rpc GetAsset(GetAssetRequest) returns (GetAssetResponse);
+  rpc IngestTelemetry(stream IngestTelemetryRequest) returns (IngestTelemetryResponse);
+  rpc StreamTelemetry(StreamTelemetryRequest) returns (stream StreamTelemetryResponse);
+}
+
+message GeoPoint {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+message Asset {
+  string id = 1;
+  string name = 2;
+  string type = 3;
+  GeoPoint location = 4;
+  string parent_id = 5;
+}
+
+message RegisterAssetRequest { Asset asset = 1; }
+message RegisterAssetResponse { Asset asset = 1; }
+message GetAssetRequest { string id = 1; }
+message GetAssetResponse { Asset asset = 1; }
+message IngestTelemetryRequest { TelemetryEnvelope telemetry = 1; }
+
+message TelemetryEnvelope {
+  string asset_id = 1;
+  google.protobuf.Timestamp observed_at = 2;
+  map<string, double> measurements = 3;
+  string source = 4;
+  string event_id = 5;
+}
+
+message IngestTelemetryResponse {
+  uint32 accepted = 1;
+  uint32 rejected = 2;
+  repeated TelemetryError errors = 3;
+}
+
+message TelemetryError {
+  uint32 index = 1;
+  string code = 2;
+  string message = 3;
+}
+
+message StreamTelemetryRequest {
+  string asset_id = 1;
+  google.protobuf.Timestamp from = 2;
+}
+
+message StreamTelemetryResponse { TelemetryEnvelope telemetry = 1; }

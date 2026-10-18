@@ -1,0 +1,18 @@
+services:
+  analytics-worker:
+    build: .
+    container_name: analytics-worker
+    restart: unless-stopped
+    networks:
+      - oprs-dev-net
+    env_file:
+      - .env
+    volumes:
+      - analytics-sqlite-data:/app/data
+
+volumes:
+  analytics-sqlite-data:
+
+networks:
+  oprs-dev-net:
+    external: true
