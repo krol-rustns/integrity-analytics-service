@@ -9,17 +9,13 @@ Os seguintes serviços devem estar em execução:
 - `petroedge-operational`: gRPC na porta `50051`.
 - `operational-response-service (OPRS)`: gRPC na porta `9090`.
 
-## Execução local
+## Execução
 
 Clone o repositório:
 
 ```bash
 git clone https://github.com/SEU_USUARIO/integrity-analytics-service.git
 cd integrity-analytics-service
-
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[test]'
 ```
 
 Configure as variáveis de ambiente:
@@ -28,18 +24,7 @@ Configure as variáveis de ambiente:
 cp .env.example .env
 ```
 
-Ajuste o arquivo `.env` conforme necessário e inicie o serviço:
-
-```bash
-make proto
-make run
-```
-
-Para executar os testes:
-
-```bash
-make test
-```
+Ajuste o arquivo `.env` conforme necessário e inicie o serviço.
 
 ## Docker
 
