@@ -26,7 +26,7 @@ class IntegrityMonitor:
 
     def _record_rejection(self, telemetry: Telemetry, reason: str) -> None:
         if telemetry.event_id:
-            self.state.record(telemetry.asset_id or self.settings.asset_id, telemetry.event_id,
+            self.state.record(telemetry.asset_id, telemetry.event_id,
                               telemetry.observed_at, "rejected", reason)
         logger.warning("telemetry_rejected_by_analyzer", extra={
             "asset_id": telemetry.asset_id, "event_id": telemetry.event_id, "reason": reason
@@ -46,11 +46,11 @@ class IntegrityMonitor:
                 "asset_id": telemetry.asset_id, "event_id": telemetry.event_id, "state": status
             })
             return
-        if telemetry.asset_id != self.settings.asset_id:
+        if telemetry.asset_id not in self.settings.asset_ids:
             self.state.record(telemetry.asset_id, telemetry.event_id, telemetry.observed_at,
                               "asset_mismatch", "asset_id diferente do configurado")
             logger.warning("telemetry_asset_mismatch", extra={
-                "configured_asset_id": self.settings.asset_id, "received_asset_id": telemetry.asset_id
+                "received_asset_id": telemetry.asset_id
             })
             return
         try:
@@ -97,33 +97,33 @@ class IntegrityMonitor:
             "diagnostic_id": diagnostic_id, "severity": result.severity,
         })
 
-    def poll_once(self) -> None:
-        watermark = self.state.watermark(self.settings.asset_id, self.settings.telemetry_from)
+    def poll_once(self, asset_id: str) -> None:
+        watermark = self.state.watermark(asset_id, self.settings.telemetry_from)
         query_from = max(
             self.settings.telemetry_from,
             watermark - timedelta(seconds=self.settings.replay_overlap_seconds),
         )
         latest_observed: datetime | None = None
         count = 0
-        for telemetry in self.operational.stream_telemetry(query_from):
+        for telemetry in self.operational.stream_telemetry(asset_id, query_from):
             count += 1
-            if telemetry.asset_id == self.settings.asset_id:
+            if telemetry.asset_id == asset_id:
                 if latest_observed is None or telemetry.observed_at > latest_observed:
                     latest_observed = telemetry.observed_at
             self.process(telemetry)
             if self.stop_event.is_set():
                 break
         if not self.stop_event.is_set() and latest_observed is not None:
-            self.state.advance_watermark(self.settings.asset_id, latest_observed)
+            self.state.advance_watermark(asset_id, latest_observed)
         logger.info("telemetry_poll_completed", extra={
-            "asset_id": self.settings.asset_id, "records_received": count,
+            "asset_id": asset_id, "records_received": count,
             "query_from": query_from.isoformat(),
             "watermark": latest_observed.isoformat() if latest_observed else watermark.isoformat(),
         })
 
     def run(self) -> None:
         logger.info("monitor_started", extra={
-            "asset_id": self.settings.asset_id,
+            "asset_ids": list(self.settings.asset_ids),
             "initial_from": self.settings.telemetry_from.isoformat(),
             "poll_interval_seconds": self.settings.poll_interval_seconds,
             "replay_overlap_seconds": self.settings.replay_overlap_seconds,
@@ -131,13 +131,18 @@ class IntegrityMonitor:
         })
         try:
             while not self.stop_event.is_set():
-                try:
-                    self.poll_once()
-                except grpc.RpcError as exc:
-                    logger.error("grpc_poll_failed", extra={
-                        "grpc_code": exc.code().name if exc.code() else "UNKNOWN",
-                        "details": exc.details(),
-                    })
+                # Uma falha num ativo (ex.: ainda não registrado) não bloqueia os demais.
+                for asset_id in self.settings.asset_ids:
+                    if self.stop_event.is_set():
+                        break
+                    try:
+                        self.poll_once(asset_id)
+                    except grpc.RpcError as exc:
+                        logger.error("grpc_poll_failed", extra={
+                            "asset_id": asset_id,
+                            "grpc_code": exc.code().name if exc.code() else "UNKNOWN",
+                            "details": exc.details(),
+                        })
                 if not self.stop_event.wait(self.settings.poll_interval_seconds):
                     continue
         finally:

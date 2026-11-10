@@ -22,7 +22,7 @@ class MeasurementRule:
 class Settings:
     operational_target: str
     diagnostics_target: str
-    asset_id: str
+    asset_ids: tuple[str, ...]
     telemetry_from: datetime
     send_min_severity: int
     measurement_rules: dict[str, MeasurementRule]
@@ -89,7 +89,7 @@ class Settings:
         return cls(
             operational_target=os.getenv("OPERATIONAL_GRPC_TARGET", "localhost:50051"),
             diagnostics_target=os.getenv("DIAGNOSTICS_GRPC_TARGET", "localhost:9090"),
-            asset_id=os.getenv("ASSET_ID", ""),
+            asset_ids=tuple(dict.fromkeys(a.strip() for a in os.getenv("ASSET_IDS", "").split(",") if a.strip())),
             telemetry_from=telemetry_from, send_min_severity=send_min_severity,
             measurement_rules=rules, severity_thresholds=thresholds,
             rpc_timeout_seconds=rpc_timeout, stream_rpc_timeout_seconds=stream_timeout,
@@ -100,8 +100,8 @@ class Settings:
         )
 
     def validate_runtime(self) -> None:
-        if not self.asset_id.strip():
-            raise ValueError("ASSET_ID é obrigatório")
+        if not self.asset_ids:
+            raise ValueError("ASSET_IDS é obrigatório (lista separada por vírgulas)")
         if not self.measurement_rules:
             raise ValueError("Configure MEASUREMENT_RULES_JSON com limites validados")
         if self.tls_enabled and not self.root_cert_path:
