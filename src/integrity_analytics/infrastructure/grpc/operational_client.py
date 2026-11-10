@@ -13,11 +13,11 @@ class OperationalTelemetryClient:
         self.channel = create_channel(settings.operational_target, settings)
         self.stub = operational_data_pb2_grpc.OperationalDataServiceStub(self.channel)
 
-    def stream_telemetry(self, from_datetime: datetime) -> Iterator[Telemetry]:
+    def stream_telemetry(self, asset_id: str, from_datetime: datetime) -> Iterator[Telemetry]:
         start = Timestamp()
         start.FromDatetime(from_datetime.astimezone(timezone.utc))
         request = operational_data_pb2.StreamTelemetryRequest(
-            asset_id=self.settings.asset_id,
+            asset_id=asset_id,
             **{"from": start},
         )
         responses = self.stub.StreamTelemetry(

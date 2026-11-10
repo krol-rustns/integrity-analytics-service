@@ -11,11 +11,11 @@ class DiagnosticsClient:
         self.channel = create_channel(settings.diagnostics_target, settings)
         self.stub = diagnostico_pb2_grpc.DiagnosticoServiceStub(self.channel)
 
-    def register(self, description: str, severity: int) -> str:
+    def register(self, fonte_id: int, description: str, severity: int) -> str:
         created_at = Timestamp()
         created_at.FromDatetime(datetime.now(timezone.utc))
         request = diagnostico_pb2.DiagnosticoRequest(
-            fonte_id=self.settings.fonte_id,
+            fonte_id=fonte_id,
             descricao=description,
             dt_criacao=created_at,
             severidade=severity,
