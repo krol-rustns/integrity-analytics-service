@@ -79,7 +79,9 @@ class IntegrityMonitor:
         self.state.record(telemetry.asset_id, telemetry.event_id, telemetry.observed_at,
                           "diagnostic_pending", "Envio iniciado; resultado ainda não confirmado")
         try:
-            diagnostic_id = self.diagnostics.register(description, result.severity)
+            diagnostic_id = self.diagnostics.register(
+                telemetry.diagnostic_fonte_id(), description, result.severity
+            )
         except grpc.RpcError as exc:
             self.state.record(telemetry.asset_id, telemetry.event_id, telemetry.observed_at,
                               "diagnostic_uncertain", f"gRPC {exc.code()}: {exc.details()}")

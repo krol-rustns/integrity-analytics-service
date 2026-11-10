@@ -23,7 +23,6 @@ class Settings:
     operational_target: str
     diagnostics_target: str
     asset_id: str
-    fonte_id: int
     telemetry_from: datetime
     send_min_severity: int
     measurement_rules: dict[str, MeasurementRule]
@@ -71,13 +70,6 @@ class Settings:
             telemetry_from = telemetry_from.astimezone(timezone.utc)
         else:
             telemetry_from = datetime.now(timezone.utc)
-        fonte_raw = os.getenv("FONTE_ID", "")
-        try:
-            fonte_id = int(fonte_raw)
-        except ValueError as exc:
-            raise ValueError("FONTE_ID deve ser um inteiro confirmado no OPRS") from exc
-        if fonte_id < 0:
-            raise ValueError("FONTE_ID deve ser não negativo")
         send_min_severity = int(os.getenv("SEND_MIN_SEVERITY", "3"))
         if not 1 <= send_min_severity <= 5:
             raise ValueError("SEND_MIN_SEVERITY deve estar entre 1 e 5")
@@ -97,7 +89,7 @@ class Settings:
         return cls(
             operational_target=os.getenv("OPERATIONAL_GRPC_TARGET", "localhost:50051"),
             diagnostics_target=os.getenv("DIAGNOSTICS_GRPC_TARGET", "localhost:9090"),
-            asset_id=os.getenv("ASSET_ID", ""), fonte_id=fonte_id,
+            asset_id=os.getenv("ASSET_ID", ""),
             telemetry_from=telemetry_from, send_min_severity=send_min_severity,
             measurement_rules=rules, severity_thresholds=thresholds,
             rpc_timeout_seconds=rpc_timeout, stream_rpc_timeout_seconds=stream_timeout,
